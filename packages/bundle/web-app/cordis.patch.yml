@@ -113,8 +113,8 @@
       name: '@deepseek-ai/dsh-host-webserver'
       inject: [webStartup]
       config:
-        host: !!js ctx.webStartup.host ?? (process.env.PORT ? '0.0.0.0' : '127.0.0.1')
-        port: !!js ctx.webStartup.port ?? (process.env.PORT ? Number(process.env.PORT) : 3080)
+        host: !!js "ctx.webStartup.host ?? (process.env.PORT ? '0.0.0.0' : '127.0.0.1')"
+        port: !!js "ctx.webStartup.port ?? (process.env.PORT ? Number(process.env.PORT) : 3080)"
         compression: gzip
         compressionLevel: 1
         compressionThresholdBytes: 1024
@@ -132,7 +132,7 @@
       name: '@deepseek-ai/dsh-web-app'
       inject: [webStartup]
       config:
-        openBrowser: !!js (process.env.PORT || process.env.RENDER ? false : ctx.webStartup.openBrowser)
+        openBrowser: !!js "(process.env.PORT || process.env.RENDER ? false : ctx.webStartup.openBrowser)"
         printUrl: true
         surfaceContext: true
         trustedHosts: !!js ctx.webStartup.trustedHosts
