@@ -1,5 +1,7 @@
 /** Session Remote owner: cold reads, explicit Agent commands, and live control state. */
 
+import { basename, extname } from 'node:path'
+import { readFile, stat } from 'node:fs/promises'
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { errorChain } from '@deepseek-ai/dsh-llm'
@@ -41,6 +43,8 @@ import type {
   SessionPageRequest,
   SessionPromptRequest,
   SessionPromptValue,
+  SessionReadWorkspaceFileRequest,
+  SessionReadWorkspaceFileValue,
   SessionRenameRequest,
   SessionRenameValue,
   SessionSearchRequest,
@@ -291,6 +295,105 @@ export class SessionController extends TypertRemoteService {
       throw new TypertRemoteFailure({
         code: 'internal',
         message: `path open failed: ${error instanceof Error ? error.message : String(error)}`,
+        details: {},
+      })
+    }
+  }
+
+  /**
+   * Read one workspace file for browser download.
+   * This replaces the native `openWorkspacePath` desktop handoff for hosted
+   * deployments where the browser cannot reach the server's filesystem via
+   * `xdg-open`/`Invoke-Item`. The file is streamed via the authenticated
+   * Typert channel and the client triggers a blob download.
+   * @param request - absolute path after Session workspace resolution.
+   * @param signal - caller cancellation.
+   * @returns base64-encoded bytes plus download metadata.
+   * @throws TypertRemoteFailure when the request is invalid, the file is too large, or reading fails.
+   */
+  @Remote('readWorkspaceFile')
+  async readWorkspaceFile(
+    request: SessionReadWorkspaceFileRequest,
+    signal: AbortSignal,
+  ): Promise<SessionReadWorkspaceFileValue> {
+    if (request.path.length === 0) {
+      throw new TypertRemoteFailure({
+        code: 'bad-request',
+        message: 'session.readWorkspaceFile requires a non-empty path',
+        details: {},
+      })
+    }
+    signal.throwIfAborted()
+    const MAX_BYTES = 10 * 1024 * 1024
+    try {
+      const st = await stat(request.path)
+      if (!st.isFile()) {
+        throw new TypertRemoteFailure({
+          code: 'bad-request',
+          message: `not a regular file: ${request.path}`,
+          details: {},
+        })
+      }
+      if (st.size > MAX_BYTES) {
+        throw new TypertRemoteFailure({
+          code: 'bad-request',
+          message: `file too large (${String(st.size)} bytes > ${String(MAX_BYTES)} bytes)`,
+          details: {},
+        })
+      }
+      const buf = await readFile(request.path)
+      signal.throwIfAborted()
+      const ext = extname(request.path).toLowerCase()
+      const mimeByExt: Record<string, string> = {
+        '.html': 'text/html; charset=utf-8',
+        '.htm': 'text/html; charset=utf-8',
+        '.js': 'text/javascript; charset=utf-8',
+        '.mjs': 'text/javascript; charset=utf-8',
+        '.cjs': 'text/javascript; charset=utf-8',
+        '.ts': 'text/typescript; charset=utf-8',
+        '.tsx': 'text/typescript; charset=utf-8',
+        '.css': 'text/css; charset=utf-8',
+        '.json': 'application/json',
+        '.md': 'text/markdown; charset=utf-8',
+        '.txt': 'text/plain; charset=utf-8',
+        '.csv': 'text/csv; charset=utf-8',
+        '.yaml': 'text/yaml; charset=utf-8',
+        '.yml': 'text/yaml; charset=utf-8',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+        '.webp': 'image/webp',
+        '.pdf': 'application/pdf',
+        '.zip': 'application/zip',
+        '.gz': 'application/gzip',
+      }
+      const mimeType = mimeByExt[ext] ?? 'application/octet-stream'
+      return {
+        data: buf.toString('base64'),
+        mimeType,
+        fileName: basename(request.path),
+        size: buf.length,
+      }
+    } catch (error: unknown) {
+      if (error instanceof TypertRemoteFailure) throw error
+      if (signal.aborted) {
+        throw new TypertRemoteFailure({
+          code: 'cancelled', message: 'file read was aborted', details: {},
+        })
+      }
+      const code = (error as NodeJS.ErrnoException).code
+      if (code === 'ENOENT' || code === 'ENOTDIR') {
+        throw new TypertRemoteFailure({
+          code: 'bad-request',
+          message: `file not found: ${request.path}`,
+          details: {},
+        })
+      }
+      throw new TypertRemoteFailure({
+        code: 'internal',
+        message: `file read failed: ${error instanceof Error ? error.message : String(error)}`,
         details: {},
       })
     }

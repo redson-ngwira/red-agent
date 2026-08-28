@@ -39,6 +39,8 @@ import type {
   SessionPageRequest,
   SessionPromptRequest,
   SessionPromptValue,
+  SessionReadWorkspaceFileRequest,
+  SessionReadWorkspaceFileValue,
   SessionRenameRequest,
   SessionRenameValue,
   SessionSearchRequest,
@@ -67,6 +69,10 @@ export interface TestSessionRemote {
     request: SessionOpenWorkspacePathRequest,
     signal?: AbortSignal,
   ): Promise<RemoteResult<SessionOpenWorkspacePathValue>>
+  readWorkspaceFile(
+    request: SessionReadWorkspaceFileRequest,
+    signal?: AbortSignal,
+  ): Promise<RemoteResult<SessionReadWorkspaceFileValue>>
   page(request: SessionPageRequest, signal?: AbortSignal): Promise<RemoteResult<SessionPage>>
   follow(request: SessionFollowRequest, signal?: AbortSignal): AsyncIterable<SessionFollowFrame>
   control(signal?: AbortSignal): AsyncIterable<SessionControlFrame>
@@ -265,6 +271,10 @@ export function createSessionTestRemote(
     cancel: request => remoteResult(() => direct.cancel(request)),
     openWorkspacePath: (request, signal = new AbortController().signal) => remoteResult(
       () => direct.openWorkspacePath(request, signal),
+      signal,
+    ),
+    readWorkspaceFile: (request, signal = new AbortController().signal) => remoteResult(
+      () => direct.readWorkspaceFile(request, signal),
       signal,
     ),
     page: (request, signal = new AbortController().signal) => remoteResult(

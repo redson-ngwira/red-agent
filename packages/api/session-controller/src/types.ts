@@ -373,6 +373,24 @@ export interface SessionOpenWorkspacePathValue {
   readonly opened: true
 }
 
+/** Request to read one workspace file for browser download via the Session Remote. */
+export interface SessionReadWorkspaceFileRequest {
+  /** Absolute path after Session workspace resolution, in Host filesystem syntax. */
+  readonly path: string
+}
+
+/** Browser-downloadable workspace file payload. */
+export interface SessionReadWorkspaceFileValue {
+  /** Base64-encoded file bytes. */
+  readonly data: string
+  /** Guessed MIME type from file extension, or application/octet-stream. */
+  readonly mimeType: string
+  /** File name for download (basename of the requested path). */
+  readonly fileName: string
+  /** File size in bytes. */
+  readonly size: number
+}
+
 /** Client-minted prompt identity used to reconcile optimistic and durable messages. */
 export type SessionRequestId = Branded<'session-request-id'>
 

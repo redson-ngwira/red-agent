@@ -16,6 +16,7 @@ import type {
   SessionPage,
   SessionPageRequest,
   SessionProjectionBaseline,
+  SessionReadWorkspaceFileValue,
   SessionSelectModelRequest,
   SessionSelectModelValue,
 } from '@deepseek-ai/dsh-api-session-controller/types'
@@ -156,6 +157,8 @@ export class FakeApiClient {
   onCancel: (payload: unknown) => Promise<RpcResponse<{ accepted: true }>> = () => Promise.resolve(ok({ accepted: true as const }))
   onOpenWorkspacePath: (payload: unknown) => Promise<RemoteResult<{ opened: true }>> =
     () => Promise.resolve(remoteOk({ opened: true as const }))
+  onReadWorkspaceFile: (payload: unknown) => Promise<RemoteResult<SessionReadWorkspaceFileValue>> =
+    () => Promise.resolve(remoteOk({ data: '', mimeType: 'application/octet-stream', fileName: 'file', size: 0 }))
 
   private readonly followConns = new Map<SessionId, ValueStreamConn<SessionFollowFrame>[]>()
   private readonly controlConns: ValueStreamConn<SessionControlFrame>[] = []
@@ -240,6 +243,11 @@ export class FakeApiClient {
           'session.openWorkspacePath',
           payload,
           this.onOpenWorkspacePath(payload),
+        ),
+        readWorkspaceFile: payload => this.record(
+          'session.readWorkspaceFile',
+          payload,
+          this.onReadWorkspaceFile(payload),
         ),
         page: request => this.page(request),
         follow: (request, signal) => this.openFollow(request, signal),

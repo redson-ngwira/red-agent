@@ -119,10 +119,34 @@ export function apply(ctx: Context): void {
           fileMentions: (owner: TurnTailOwnerProps) => ctx.get('chatFileMentions')?.forClosing(owner),
           openFile: async (path) => {
             const cwd = ctx.sessions.list.getSnapshot().byId[sessionId]?.cwd
-            const result = await ctx.remote.session.openWorkspacePath({
-              path: resolveWorkspacePath(cwd, path),
-            })
-            if (!result.ok) throw new Error(`path open failed: ${result.error.message}`)
+            const abs = resolveWorkspacePath(cwd, path)
+            // Hosted SaaS (Render): stream file via authenticated Typert Remote
+            // and trigger a browser download. This replaces the native
+            // `xdg-open`/`Invoke-Item` path which only works on the server's
+            // local desktop. Fall back to the native opener for large files or
+            // local desktop launches.
+            const dl = await ctx.remote.session.readWorkspaceFile({ path: abs })
+            if (dl.ok) {
+              const bytes = Uint8Array.from(atob(dl.value.data), c => c.charCodeAt(0))
+              const blob = new Blob([bytes], { type: dl.value.mimeType })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = dl.value.fileName
+              document.body.appendChild(a)
+              a.click()
+              a.remove()
+              setTimeout(() => { URL.revokeObjectURL(url) }, 1000)
+              return
+            }
+            // Fallback to native opener (local `dsh web` on 127.0.0.1)
+            const canNative = await ctx.remote.session.canOpenWorkspacePath()
+            if (canNative.ok && canNative.value) {
+              const result = await ctx.remote.session.openWorkspacePath({ path: abs })
+              if (!result.ok) throw new Error(`path open failed: ${result.error.message}`)
+              return
+            }
+            throw new Error(`file download failed: ${dl.error.message}`)
           },
           loadOlder: () => { void session.loadOlder() },
           loadImage: Object.assign(
