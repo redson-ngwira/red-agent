@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: dsh-harness
+    env: node
+    plan: starter
+    # Render injects $PORT automatically; harness now defaults to 0.0.0.0:$PORT
+    # when PORT is set (see packages/bundle/web-app/cordis.patch.yml).
+    buildCommand: pnpm install --frozen-lockfile && pnpm run build
+    startCommand: pnpm dsh web --no-open
+    healthCheckPath: /
+    disk:
+      name: dsh-data
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: NODE_VERSION
+        value: 22.19.0
+      - key: DSH_HOME
+        value: /data/.dsh
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      # Optional: uncomment to force all-interfaces even without $PORT
+      # - key: DSH_HOST
+      #   value: 0.0.0.0

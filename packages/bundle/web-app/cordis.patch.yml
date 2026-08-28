@@ -108,12 +108,13 @@
     # Plain route-registration carrier; host and port come from the app's
     # webStartup provider, with these deployment fallbacks. The dist is served by
     # the web-runtime row below through the fallback seat.
+    # Render and other PaaS hosts set $PORT and require 0.0.0.0; local dev keeps 127.0.0.1.
     - id: webserver
       name: '@deepseek-ai/dsh-host-webserver'
       inject: [webStartup]
       config:
-        host: !!js ctx.webStartup.host ?? '127.0.0.1'
-        port: !!js ctx.webStartup.port ?? 3080
+        host: !!js ctx.webStartup.host ?? (process.env.PORT ? '0.0.0.0' : '127.0.0.1')
+        port: !!js ctx.webStartup.port ?? (process.env.PORT ? Number(process.env.PORT) : 3080)
         compression: gzip
         compressionLevel: 1
         compressionThresholdBytes: 1024
@@ -131,7 +132,7 @@
       name: '@deepseek-ai/dsh-web-app'
       inject: [webStartup]
       config:
-        openBrowser: !!js ctx.webStartup.openBrowser
+        openBrowser: !!js (process.env.PORT || process.env.RENDER ? false : ctx.webStartup.openBrowser)
         printUrl: true
         surfaceContext: true
         trustedHosts: !!js ctx.webStartup.trustedHosts
