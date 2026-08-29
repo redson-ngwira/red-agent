@@ -27,8 +27,12 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 COPY --from=build /app .
 EXPOSE 10000
+# Free tier has low file-descriptor/inotify limits; chokidar's live
+# patchReload watches /tmp/.dsh/profiles/web and hits EMFILE. Polling uses
+# fewer fds and the increased limit avoids the crash.
+ENV CHOKIDAR_USEPOLLING=true
 # DSH_HOME defaults to ~/.dsh inside container; on Render with disk it is
 # overridden via render.yaml: DSH_HOME=/data/.dsh . Free tier has no /data
 # so keep ephemeral default (no ENV here) — harness creates ~/.dsh on demand.
 # Render provides $PORT at runtime; harness binds 0.0.0.0:$PORT automatically
-CMD ["pnpm", "red", "web", "--no-open"]
+CMD ["sh", "-c", "ulimit -n 65535; exec pnpm red web --no-open"]
