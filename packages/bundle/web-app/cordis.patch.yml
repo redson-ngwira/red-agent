@@ -160,9 +160,12 @@
       inject: [webRuntime]
       config:
         # LAN literals derived from the active bind plus --trusted-host extras.
+        # Hosted (Render) adds RENDER_EXTERNAL_HOSTNAME automatically so
+        # https://<app>.onrender.com passes the Host/Origin fence without
+        # manual --trusted-host.
         # A deployment adding authorities keeps this expression and concatenates
         # its literals, for example: ['app.internal', ...ctx.webRuntime.trustedHosts].
-        trustedHosts: !!js ctx.webRuntime.trustedHosts
+        trustedHosts: !!js "[...ctx.webRuntime.trustedHosts, process.env.RENDER_EXTERNAL_HOSTNAME].filter(Boolean)"
 
     - id: api-remotes
       name: '@deepseek-ai/dsh-api-remotes'
