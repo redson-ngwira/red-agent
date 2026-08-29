@@ -137,6 +137,16 @@
         surfaceContext: true
         trustedHosts: !!js ctx.webStartup.trustedHosts
 
+    # RED AGENT hosted login gate — /login + /logout with RED_AGENT_PASSWORD.
+    # Sets the same __Host-dsh-auth-* HMAC cookie BrowserAuth checks, so
+    # hosted users sign in without the per-process ?token= URL.
+    - id: auth-simple
+      name: '@deepseek-ai/dsh-host-auth-simple'
+      inject: [webServer, credentials]
+      config:
+        cookieMaxAgeDays: 7
+        demoPassword: red
+
     # The client-plugin reload chain, always mounted: it is idle until a
     # rebuild watcher (pnpm run dev:web) actually rewrites client bundles. It
     # is a row rather than a child of web-runtime because its node half is a

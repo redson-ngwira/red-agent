@@ -1572,6 +1572,9 @@ importers:
       '@deepseek-ai/dsh-file-reference-local':
         specifier: workspace:^
         version: link:../../context/file-reference-local
+      '@deepseek-ai/dsh-host-auth-simple':
+        specifier: workspace:^
+        version: link:../../host/auth-simple
       '@deepseek-ai/dsh-host-directory-picker-auto':
         specifier: workspace:^
         version: link:../../host/directory-picker-auto
@@ -5801,6 +5804,31 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
+
+  packages/host/auth-simple:
+    dependencies:
+      '@deepseek-ai/dsh-credentials':
+        specifier: workspace:^
+        version: link:../../credentials/credentials
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-client-connection':
+        specifier: workspace:^
+        version: link:../../client/connection
+      '@deepseek-ai/dsh-credentials-local':
+        specifier: workspace:^
+        version: link:../../credentials/credentials-local
+      '@deepseek-ai/dsh-host-webserver':
+        specifier: workspace:^
+        version: link:../webserver
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
 
   packages/host/directory-picker:
     devDependencies:
