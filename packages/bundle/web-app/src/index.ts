@@ -155,10 +155,15 @@ function webSurfacePrompt(webUrl: string): string {
     + 'Do not start a replacement server unless the user asks; if one is needed, use a managed background job and verify its exact URL.'
 }
 
-/** Resolve the canonical loopback URL from the active Web server. */
+/** Resolve the canonical URL for logs and the webSurface prompt. On Render use the public https host. */
 function localWebUrl(ctx: Context): string {
   const port = ctx.get('webServer')?.port
   if (port === undefined) throw new Error('web-app: webServer service missing while resolving Web runtime')
+  const external = process.env.RENDER_EXTERNAL_HOSTNAME
+  if (external !== undefined && external.length > 0) {
+    // Render terminates TLS externally; the public URL is https://<external-host>
+    return `https://${external}`
+  }
   return `http://${LOOPBACK_HOST}:${String(port)}`
 }
 

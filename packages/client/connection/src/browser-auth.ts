@@ -117,9 +117,17 @@ function cookieValue(headerValue: string, name: string): string | undefined {
   return undefined
 }
 
+function isHttpsForwarded(headers: ConnectionTrustRequest['headers']): boolean {
+  const v = header(headers, 'x-forwarded-proto')
+  if (v !== undefined) return v.toLowerCase() === 'https'
+  return false
+}
+
 /** Serialize the fixed browser-session attributes; generated names and values are cookie-safe base64url. */
-function sessionCookie(name: string, value: string, expiresAt: number, maxAgeSeconds: number): string {
-  return `${name}=${value}; Max-Age=${String(maxAgeSeconds)}; Path=/; Expires=${new Date(expiresAt).toUTCString()}; HttpOnly; SameSite=Strict`
+function sessionCookie(name: string, value: string, expiresAt: number, maxAgeSeconds: number, isSecure: boolean): string {
+  const secureName = isSecure && !name.startsWith('__Host-') ? `__Host-${name}` : name
+  const base = `${secureName}=${value}; Max-Age=${String(maxAgeSeconds)}; Path=/; Expires=${new Date(expiresAt).toUTCString()}; HttpOnly; SameSite=Strict`
+  return isSecure ? `${base}; Secure` : base
 }
 
 function signature(secret: Buffer, body: string): Buffer {
@@ -253,12 +261,13 @@ export class BrowserAuth {
           issuedAt,
           expiresAt,
         }, this.secret)
+        const isSecure = isHttpsForwarded(req.headers) || process.env.RENDER !== undefined
         res.writeHead(303, {
           'cache-control': 'no-store',
           'location': '/',
           'referrer-policy': 'no-referrer',
           'set-cookie': sessionCookie(
-            cookieName(authority), value, expiresAt, Math.floor(this.maxAgeMilliseconds / 1000),
+            cookieName(authority), value, expiresAt, Math.floor(this.maxAgeMilliseconds / 1000), isSecure,
           ),
         })
         res.end()
@@ -290,7 +299,13 @@ export class BrowserAuth {
     const authority = requestAuthority(request.headers)
     const rawCookie = header(request.headers, 'cookie')
     if (authority === undefined || rawCookie === undefined) return false
-    const value = cookieValue(rawCookie, cookieName(authority))
+    const baseName = cookieName(authority)
+    const candidates = [`__Host-${baseName}`, baseName]
+    let value: string | undefined
+    for (const n of candidates) {
+      value = cookieValue(rawCookie, n)
+      if (value !== undefined) break
+    }
     if (value === undefined) return false
     const payload = decodeCookie(value, this.secret)
     if (payload === undefined || payload.authority !== authority) return false
