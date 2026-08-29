@@ -130,13 +130,21 @@ export function apply(ctx: Context): void {
               const bytes = Uint8Array.from(atob(dl.value.data), c => c.charCodeAt(0))
               const blob = new Blob([bytes], { type: dl.value.mimeType })
               const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = dl.value.fileName
-              document.body.appendChild(a)
-              a.click()
-              a.remove()
-              setTimeout(() => { URL.revokeObjectURL(url) }, 1000)
+              const mt = dl.value.mimeType
+              const isPreview = mt.startsWith('text/html') || mt.startsWith('image/') || mt === 'application/pdf' || mt.startsWith('text/plain')
+              if (isPreview) {
+                // HTML / images / PDF / text preview in new tab — cool for hosted
+                window.open(url, '_blank', 'noopener')
+                setTimeout(() => { URL.revokeObjectURL(url) }, 60000)
+              } else {
+                const a = document.createElement('a')
+                a.href = url
+                a.download = dl.value.fileName
+                document.body.appendChild(a)
+                a.click()
+                a.remove()
+                setTimeout(() => { URL.revokeObjectURL(url) }, 1000)
+              }
               return
             }
             // Fallback to native opener (local `dsh web` on 127.0.0.1)
