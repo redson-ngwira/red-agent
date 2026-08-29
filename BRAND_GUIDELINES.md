@@ -1,6 +1,10 @@
-# DeepSeek Harness Brand Asset Usage Guidelines
+# RED AGENT (fork of DeepSeek Harness) — Brand Guidelines
 
 English | [中文](BRAND_GUIDELINES.zh.md)
+
+**RED AGENT** is a hosted fork of **DeepSeek Harness** (`dsh`, `202k stars`). This fork keeps the original DeepSeek Harness brand guidelines below for upstream compliance, but adds its own **RED AGENT** identity (red `R` badge, `RED AGENT` wordmark, `#E10600`) for its hosted SaaS on `https://red-agent.onrender.com`.
+
+Original DeepSeek Harness guidelines (upstream):
 
 To maintain the long\-term healthy development of the DeepSeek Harness ecosystem, avoid user confusion, and facilitate the retrieval and identification of related resources, we have established these specifications and hope that everyone will adhere to them:
 
