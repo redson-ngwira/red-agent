@@ -11,7 +11,7 @@ type OfficialBrandMarkProps = HeroBrandMarkOwnerProps & SidebarBrandMarkOwnerPro
  * @returns the RED AGENT mark.
  */
 export function OfficialBrandMark({ size, className }: OfficialBrandMarkProps) {
-  const dim = size === 'large' ? 32 : size === 'medium' ? 24 : 16
+  const dim = size
   return (
     <span
       className={className}
