@@ -1,0 +1,49 @@
+# RED AGENT — pre-curated providers baked into the Docker image for Free tier
+# (Free has no disk, so ~/.dsh/settings.yaml is ephemeral; this file is copied
+# to /root/.dsh/settings.yaml in the Dockerfile so redeploys keep opencode +
+# cerebras + orcra without manual Add provider).
+ui-onboarding:
+  welcomeNoticeVersion: 2026-08-13.1
+llm-deepseek:
+  baseURL: https://opencode.ai/zen/v1
+  models:
+    - id: deepseek-v4-flash
+      name: DeepSeek-V4-Flash
+      contextWindow: 1000000
+    - id: deepseek-v4-pro
+      name: DeepSeek-V4-Pro
+      contextWindow: 1000000
+    - id: deepseek-v4-flash-free
+      name: deepseek-v4-flash-free
+llm-pi-ai:
+  providers:
+    opencode:
+      api: openai-responses
+      apiKeyEnv: OPENCODE_API_KEY
+      baseURL: https://opencode.ai/zen/v1
+      models:
+        - id: muse-spark-1.2-contributor-free
+          name: Muse Spark 1.2 Free
+          api: openai-responses
+          input: [text, image]
+          reasoning: true
+          contextWindow: 1048576
+          maxTokens: 131072
+    orcra:
+      displayName: orcra
+      apiKeyEnv: ORCRA_API_KEY
+      api: openai-completions
+      baseURL: https://api.orcarouter.ai/v1
+      models:
+        - id: deepseek/deepseek-v4-flash-free
+          name: deepseek/deepseek-v4-flash-free
+    cerebras:
+      apiKeyEnv: CEREBRAS_API_KEY
+agent-default-model:
+  provider: opencode
+  model: muse-spark-1.2-contributor-free
+ui-theme:
+  preference: light
+  fontSize: 16
+agent-presets:
+  default: standard
