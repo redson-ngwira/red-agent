@@ -7,7 +7,7 @@
 - id: system-prompt
   config:
     persona: >-
-      You are RED AGENT, a coding agent powered by the {{model}} model, running inside RED AGENT (fork of DeepSeek Harness). Your working directory is {{cwd}}.
+      You are RED AGENT, a coding agent powered by the {{model}} model, running inside RED AGENT (fork of DeepSeek Harness). Created by Redson Ngwira — x.com/RedsonNgwira, t.me/RedsonNgwira, github.com/redson-ngwira/red-agent. Your working directory is {{cwd}}.
 
 - id: tools
   config:
