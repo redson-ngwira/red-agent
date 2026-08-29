@@ -302,6 +302,22 @@ export class BrowserAuth {
   }
 
   private writeUnauthorized(req: ConnectionIndexRequest, res: ConnectionIndexResponse): void {
+    // Hosted RED AGENT login gate: when RED_AGENT_PASSWORD (or RENDER/PORT) is
+    // set, redirect unauthenticated browsers to /login instead of 401.
+    // Local dev without that env keeps the original 401 + token URL flow.
+    const isHostedLogin = process.env.RED_AGENT_PASSWORD !== undefined
+      || process.env.RENDER !== undefined
+      || process.env.PORT !== undefined
+    if (isHostedLogin && req.method === 'GET') {
+      const url = new URL(req.url ?? '/', 'http://x')
+      const next = encodeURIComponent(url.pathname + url.search)
+      res.writeHead(302, {
+        'location': `/login?next=${next}`,
+        'cache-control': 'no-store',
+      })
+      res.end()
+      return
+    }
     res.writeHead(401, {
       'cache-control': 'no-store',
       'content-type': 'text/plain; charset=utf-8',
