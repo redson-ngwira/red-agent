@@ -16,6 +16,10 @@ COPY tsconfig*.json tsdown.config.ts ./
 # git is now available, and scripts/ is present for install-lefthook.mjs.
 RUN pnpm install --frozen-lockfile
 COPY . .
+# Render's Docker context may not include .git history for pnpm run build's
+# git rev-parse HEAD (client-build-environment). Provide a fallback hash when
+# git is unavailable — the build script prefers DSH_CLIENT_COMMIT_HASH env.
+ENV DSH_CLIENT_COMMIT_HASH=0000000
 RUN pnpm run build
 
 FROM node:22-bookworm-slim
