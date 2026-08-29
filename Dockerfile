@@ -27,6 +27,8 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 COPY --from=build /app .
 EXPOSE 10000
-ENV DSH_HOME=/data/.dsh
+# DSH_HOME defaults to ~/.dsh inside container; on Render with disk it is
+# overridden via render.yaml: DSH_HOME=/data/.dsh . Free tier has no /data
+# so keep ephemeral default (no ENV here) — harness creates ~/.dsh on demand.
 # Render provides $PORT at runtime; harness binds 0.0.0.0:$PORT automatically
-CMD ["pnpm", "dsh", "web", "--no-open"]
+CMD ["pnpm", "red", "web", "--no-open"]
